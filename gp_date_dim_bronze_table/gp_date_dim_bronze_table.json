@@ -1,0 +1,45 @@
+{
+  "name" : "gp_date_dim_bronze_table",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::152334825638:role/global-partners-role",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-152334825638-us-east-1/scripts/gp_date_dim_bronze_table.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-152334825638-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--conf" : "spark.eventLog.rolling.enabled=true --conf spark.sql.catalog.glue_catalog.glue.skip-name-validation=true",
+    "--enable-glue-datacatalog" : "",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-152334825638-us-east-1/temporary/"
+  },
+  "connections" : {
+    "connections" : [ "SSMS-SQL-Connection" ]
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.1",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1787687245977\":{\"DirectJDBCSource\":{\"ConnectionName\":\"SSMS-SQL-Connection\",\"ConnectionType\":\"sqlserver\",\"Database\":\"\",\"Name\":\"Microsoft SQL Server\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"date_key\",\"Type\":\"date\"},{\"Name\":\"year\",\"Type\":\"smallint\"},{\"Name\":\"month\",\"Type\":\"int\"},{\"Name\":\"week\",\"Type\":\"int\"},{\"Name\":\"day_of_week\",\"Type\":\"string\"},{\"Name\":\"is_weekend\",\"Type\":\"boolean\"},{\"Name\":\"is_holiday\",\"Type\":\"boolean\"},{\"Name\":\"holiday_name\",\"Type\":\"string\"}]}],\"RedshiftTmpDir\":\"\",\"Table\":\"date_dim\"}},\"node-1787687303532\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1787674963108\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1787687245977\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://global-partners-oseikwadwo/bronze/date_dim/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Global_Partners_Project",
+    "branch" : "development",
+    "folder" : "gp_date_dim_bronze_table"
+  }
+}
