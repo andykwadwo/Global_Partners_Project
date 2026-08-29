@@ -1,0 +1,42 @@
+{
+  "name" : "gp_CLV_gold_table",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::152334825638:role/global-partners-role",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-152334825638-us-east-1/scripts/gp_CLV_gold_table.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-152334825638-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--conf" : "spark.eventLog.rolling.enabled=true --conf spark.sql.catalog.glue_catalog.glue.skip-name-validation=true",
+    "--enable-glue-datacatalog" : "",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-152334825638-us-east-1/temporary/"
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.1",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1787761503951\":{\"S3CsvSource\":{\"AdditionalOptions\":{\"EnableSamplePath\":false,\"SamplePath\":\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"},\"Escaper\":\"\",\"Exclusions\":[],\"Name\":\"Amazon S3\",\"OptimizePerformance\":false,\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"app_name\",\"Type\":\"string\"},{\"Name\":\"restaurant_id\",\"Type\":\"string\"},{\"Name\":\"creation_time_utc\",\"Type\":\"string\"},{\"Name\":\"order_id\",\"Type\":\"string\"},{\"Name\":\"user_id\",\"Type\":\"string\"},{\"Name\":\"printed_card_number\",\"Type\":\"string\"},{\"Name\":\"is_loyalty\",\"Type\":\"string\"},{\"Name\":\"currency\",\"Type\":\"string\"},{\"Name\":\"lineitem_id\",\"Type\":\"string\"},{\"Name\":\"item_category\",\"Type\":\"string\"},{\"Name\":\"item_name\",\"Type\":\"string\"},{\"Name\":\"item_price\",\"Type\":\"string\"},{\"Name\":\"item_quantity\",\"Type\":\"string\"},{\"Name\":\"formatted_date\",\"Type\":\"string\"},{\"Name\":\"rounded_price\",\"Type\":\"string\"}]}],\"Paths\":[\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"],\"QuoteChar\":\"quote\",\"Recurse\":true,\"Separator\":\"comma\",\"WithHeader\":true}},\"node-1787761479156\":{\"S3CsvSource\":{\"AdditionalOptions\":{\"EnableSamplePath\":false,\"SamplePath\":\"s3://global-partners-oseikwadwo/bronze/order_item_options/run-1787688064766-part-r-00000\"},\"Escaper\":\"\",\"Exclusions\":[],\"Name\":\"Amazon S3\",\"OptimizePerformance\":false,\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"order_id\",\"Type\":\"string\"},{\"Name\":\"lineitem_id\",\"Type\":\"string\"},{\"Name\":\"option_group_name\",\"Type\":\"string\"},{\"Name\":\"option_name\",\"Type\":\"string\"},{\"Name\":\"option_price\",\"Type\":\"string\"},{\"Name\":\"option_quantity\",\"Type\":\"string\"}]}],\"Paths\":[\"s3://global-partners-oseikwadwo/bronze/order_item_options/run-1787688064766-part-r-00000\"],\"QuoteChar\":\"quote\",\"Recurse\":true,\"Separator\":\"comma\",\"WithHeader\":true}},\"node-1787773761209\":{\"SparkSQL\":{\"Inputs\":[\"node-1787761479156\",\"node-1787761503951\"],\"Name\":\"SQL Query\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"ORDER_ID\",\"Type\":\"string\"},{\"Name\":\"USER_ID\",\"Type\":\"string\"},{\"Name\":\"rev_per_order\",\"Type\":\"double\"},{\"Name\":\"CLV_Category\",\"Type\":\"string\"}]}],\"SqlAliases\":[{\"Alias\":\"myDataSourceoio\",\"From\":\"node-1787761479156\"},{\"Alias\":\"myDataSourceoi\",\"From\":\"node-1787761503951\"}],\"SqlQuery\":\"WITH TotalRevenue AS (\\nselect\\n    oio.ORDER_ID,\\n    oi.USER_ID,\\n    SUM(oi.ITEM_PRICE * oi.ITEM_QUANTITY) AS rev_per_order\\nFROM  \\n    myDataSourceoio oio\\njoin\\n    myDataSourceoi oi\\non\\n    oi.ORDER_ID = oio.ORDER_ID AND oi.LINEITEM_ID = oio.LINEITEM_ID\\nGROUP by\\n    oio.ORDER_ID,oi.USER_ID\\nORDER by\\n    oi.USER_ID\\n),\\nPercentRank AS(\\nSELECT \\n    ORDER_ID,\\n    USER_ID,\\n    rev_per_order,\\n    NTILE(5) OVER (ORDER BY rev_per_order DESC) AS percent_rank\\nFROM\\n    TotalRevenue\\n    )\\n    \\nSELECT\\n    ORDER_ID,\\n    USER_ID,\\n    rev_per_order,\\n    (CASE WHEN percent_rank = 1 THEN \\\"High CLV\\\" WHEN\\n    percent_rank IN (2,3,4) THEN \\\"Medium CLV\\\" \\n    ELSE \\\"Low CLV\\\" END) AS CLV_Category\\nFROM\\n    PercentRank\"}},\"node-1787775267819\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1787758491393\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1787773761209\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://global-partners-oseikwadwo/gold/customer_lifetime_value/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Global_Partners_Project",
+    "branch" : "development",
+    "folder" : "gp_CLV_gold_table"
+  }
+}
