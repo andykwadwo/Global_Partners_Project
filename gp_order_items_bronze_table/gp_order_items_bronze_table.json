@@ -1,0 +1,45 @@
+{
+  "name" : "gp_order_items_bronze_table",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::152334825638:role/global-partners-role",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-152334825638-us-east-1/scripts/gp_order_items_bronze_table.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-152334825638-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--conf" : "spark.eventLog.rolling.enabled=true --conf spark.sql.catalog.glue_catalog.glue.skip-name-validation=true",
+    "--enable-glue-datacatalog" : "",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-152334825638-us-east-1/temporary/"
+  },
+  "connections" : {
+    "connections" : [ "SSMS-SQL-Connection" ]
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.1",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1787688188786\":{\"DirectJDBCSource\":{\"ConnectionName\":\"SSMS-SQL-Connection\",\"ConnectionType\":\"sqlserver\",\"Database\":\"\",\"Name\":\"Microsoft SQL Server\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"app_name\",\"Type\":\"string\"},{\"Name\":\"restaurant_id\",\"Type\":\"string\"},{\"Name\":\"creation_time_utc\",\"Type\":\"string\"},{\"Name\":\"order_id\",\"Type\":\"string\"},{\"Name\":\"user_id\",\"Type\":\"string\"},{\"Name\":\"printed_card_number\",\"Type\":\"bigint\"},{\"Name\":\"is_loyalty\",\"Type\":\"boolean\"},{\"Name\":\"currency\",\"Type\":\"string\"},{\"Name\":\"lineitem_id\",\"Type\":\"string\"},{\"Name\":\"item_category\",\"Type\":\"string\"},{\"Name\":\"item_name\",\"Type\":\"string\"},{\"Name\":\"item_price\",\"Type\":\"double\"},{\"Name\":\"item_quantity\",\"Type\":\"int\"}]}],\"RedshiftTmpDir\":\"\",\"Table\":\"order_items\"}},\"node-1787688242779\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1787674963108\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1787688188786\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://global-partners-oseikwadwo/bronze/order_items/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Global_Partners_Project",
+    "branch" : "development",
+    "folder" : "gp_order_items_bronze_table"
+  }
+}
