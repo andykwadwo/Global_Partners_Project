@@ -1,0 +1,42 @@
+{
+  "name" : "gp_loyalty_program_gold_table",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::152334825638:role/global-partners-role",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-152334825638-us-east-1/scripts/gp_loyalty_program_gold_table.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-152334825638-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--conf" : "spark.eventLog.rolling.enabled=true --conf spark.sql.catalog.glue_catalog.glue.skip-name-validation=true",
+    "--enable-glue-datacatalog" : "",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-152334825638-us-east-1/temporary/"
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.1",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1787925788219\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1787925458035\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1787925537533\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://global-partners-oseikwadwo/gold/loyalty-program-metrics/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}},\"node-1787925537533\":{\"SparkSQL\":{\"Inputs\":[\"node-1787925469261\"],\"Name\":\"SQL Query\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"IS_LOYALTY\",\"Type\":\"string\"},{\"Name\":\"average_spent_per_customer\",\"Type\":\"double\"},{\"Name\":\"order_count_per_customer\",\"Type\":\"bigint\"},{\"Name\":\"customer_ltv\",\"Type\":\"double\"}]}],\"SqlAliases\":[{\"Alias\":\"myDataSource\",\"From\":\"node-1787925469261\"}],\"SqlQuery\":\"select\\n    user_id\\n    IS_LOYALTY,\\n    ROUND(AVG(ITEM_PRICE * ITEM_QUANTITY),2) AS average_spent_per_customer,\\n    COUNT(DISTINCT ORDER_ID) AS order_count_per_customer,\\n    ROUND(SUM(ITEM_PRICE * ITEM_QUANTITY),2) AS customer_ltv\\nFROM\\n    myDataSource\\nGROUP by\\n    user_id,IS_LOYALTY\\nHAVING \\n    COUNT(DISTINCT ORDER_ID) > 1\"}},\"node-1787925469261\":{\"S3CsvSource\":{\"AdditionalOptions\":{\"EnableSamplePath\":false,\"SamplePath\":\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"},\"Escaper\":\"\",\"Exclusions\":[],\"Name\":\"Amazon S3\",\"OptimizePerformance\":false,\"Paths\":[\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"],\"QuoteChar\":\"quote\",\"Recurse\":true,\"Separator\":\"comma\",\"WithHeader\":true}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Global_Partners_Project",
+    "branch" : "development",
+    "folder" : "gp_loyalty_program_gold_table"
+  }
+}
