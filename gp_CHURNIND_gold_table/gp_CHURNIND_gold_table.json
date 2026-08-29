@@ -1,0 +1,42 @@
+{
+  "name" : "gp_CHURNIND_gold_table",
+  "jobMode" : "VISUAL",
+  "description" : "",
+  "role" : "arn:aws:iam::152334825638:role/global-partners-role",
+  "executionProperty" : {
+    "maxConcurrentRuns" : 1
+  },
+  "command" : {
+    "name" : "glueetl",
+    "scriptLocation" : "s3://aws-glue-assets-152334825638-us-east-1/scripts/gp_CHURNIND_gold_table.py",
+    "pythonVersion" : "3"
+  },
+  "defaultArguments" : {
+    "--enable-metrics" : "",
+    "--enable-spark-ui" : "true",
+    "--spark-event-logs-path" : "s3://aws-glue-assets-152334825638-us-east-1/sparkHistoryLogs/",
+    "--enable-job-insights" : "true",
+    "--enable-observability-metrics" : "true",
+    "--conf" : "spark.eventLog.rolling.enabled=true --conf spark.sql.catalog.glue_catalog.glue.skip-name-validation=true",
+    "--enable-glue-datacatalog" : "",
+    "--enable-continuous-cloudwatch-log" : "true",
+    "--job-bookmark-option" : "job-bookmark-disable",
+    "--job-language" : "python",
+    "--TempDir" : "s3://aws-glue-assets-152334825638-us-east-1/temporary/"
+  },
+  "maxRetries" : 0,
+  "allocatedCapacity" : 10,
+  "timeout" : 480,
+  "maxCapacity" : 10.0,
+  "glueVersion" : "5.1",
+  "numberOfWorkers" : 10,
+  "workerType" : "G.1X",
+  "executionClass" : "STANDARD",
+  "codeGenConfigurationNodes" : "{\"node-1787856322649\":{\"S3DirectTarget\":{\"AutoDataQuality\":{\"EvaluationContext\":\"EvaluateDataQuality_node1787843854341\",\"IsEnabled\":true},\"Compression\":\"none\",\"Format\":\"csv\",\"Inputs\":[\"node-1787855130543\"],\"Name\":\"Amazon S3\",\"NumberTargetPartitions\":\"1\",\"PartitionKeys\":[],\"Path\":\"s3://global-partners-oseikwadwo/gold/customer-churn-indicators/\",\"SchemaChangePolicy\":{\"EnableUpdateCatalog\":false}}},\"node-1787855048108\":{\"S3CsvSource\":{\"AdditionalOptions\":{\"EnableSamplePath\":false,\"SamplePath\":\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"},\"Escaper\":\"\",\"Exclusions\":[],\"Name\":\"Amazon S3\",\"OptimizePerformance\":false,\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"app_name\",\"Type\":\"string\"},{\"Name\":\"restaurant_id\",\"Type\":\"string\"},{\"Name\":\"creation_time_utc\",\"Type\":\"string\"},{\"Name\":\"order_id\",\"Type\":\"string\"},{\"Name\":\"user_id\",\"Type\":\"string\"},{\"Name\":\"printed_card_number\",\"Type\":\"string\"},{\"Name\":\"is_loyalty\",\"Type\":\"string\"},{\"Name\":\"currency\",\"Type\":\"string\"},{\"Name\":\"lineitem_id\",\"Type\":\"string\"},{\"Name\":\"item_category\",\"Type\":\"string\"},{\"Name\":\"item_name\",\"Type\":\"string\"},{\"Name\":\"item_price\",\"Type\":\"string\"},{\"Name\":\"item_quantity\",\"Type\":\"string\"},{\"Name\":\"formatted_date\",\"Type\":\"string\"},{\"Name\":\"rounded_price\",\"Type\":\"string\"}]}],\"Paths\":[\"s3://global-partners-oseikwadwo/silver/order_items/run-1787708185380-part-r-00000\"],\"QuoteChar\":\"quote\",\"Recurse\":true,\"Separator\":\"comma\",\"WithHeader\":true}},\"node-1787855130543\":{\"SparkSQL\":{\"Inputs\":[\"node-1787855048108\"],\"Name\":\"SQL Query\",\"OutputSchemas\":[{\"Columns\":[{\"Name\":\"user_id\",\"Type\":\"string\"},{\"Name\":\"days_since_last_order\",\"Type\":\"int\"},{\"Name\":\"avg_gap_days\",\"Type\":\"double\"},{\"Name\":\"pct_change_spend\",\"Type\":\"double\"},{\"Name\":\"inactivity_tag\",\"Type\":\"string\"}]}],\"SqlAliases\":[{\"Alias\":\"myDataSource\",\"From\":\"node-1787855048108\"}],\"SqlQuery\":\"WITH Order_Sequence AS (\\n    SELECT \\n        user_id,\\n        formatted_date,\\n        SUM(item_price) as order_spend,\\n        LAG(formatted_date) OVER (PARTITION BY user_id ORDER BY formatted_date ASC) as prev_order_date\\n    FROM myDataSource\\n    GROUP BY user_id, formatted_date\\n),\\n\\nCustomer_Gaps AS (\\n    SELECT \\n        user_id,\\n        DATEDIFF(CURRENT_DATE(), MAX(formatted_date)) as days_since_last_order,\\n        AVG(DATEDIFF(formatted_date, prev_order_date)) as avg_gap_days,\\n        \\n\\n        SUM(CASE WHEN order_rank = 1 THEN order_spend END) as current_period_spend,\\n        SUM(CASE WHEN order_rank = 2 THEN order_spend END) as previous_period_spend\\n    FROM (\\n        SELECT *,\\n               ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY formatted_date DESC) as order_rank\\n        FROM Order_Sequence\\n    )\\n    GROUP BY user_id\\n),\\n\\nCalculated_Metrics AS (\\n    SELECT \\n        user_id,\\n        days_since_last_order,\\n        COALESCE(avg_gap_days, 0) as avg_gap_days,\\n        current_period_spend,\\n        previous_period_spend,\\n        CASE \\n            WHEN COALESCE(previous_period_spend, 0) = 0 THEN NULL \\n            ELSE ((current_period_spend - previous_period_spend) / previous_period_spend) * 100 \\n        END as pct_change_spend\\n    FROM Customer_Gaps\\n)\\n\\nSELECT \\n    user_id,\\n    days_since_last_order,\\n    avg_gap_days,\\n    pct_change_spend,\\n    CASE \\n        WHEN days_since_last_order > 90 THEN 'Churned'\\n        WHEN days_since_last_order > 45 THEN 'At Risk'\\n        WHEN days_since_last_order > 30 THEN 'Needs Attention'\\n        ELSE 'Active'\\n    END as inactivity_tag\\nFROM Calculated_Metrics;\\n\"}}}",
+  "sourceControlDetails" : {
+    "provider" : "GITHUB",
+    "repository" : "Global_Partners_Project",
+    "branch" : "development",
+    "folder" : "gp_CHURNIND_gold_table"
+  }
+}
