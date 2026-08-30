@@ -1,1 +1,90 @@
+name: Run AWS Glue Job
 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "glue-scripts/**"
+      - ".github/workflows/run-glue-job.yml"
+
+  workflow_dispatch:
+    inputs:
+      glue_job_name:
+        description: "AWS Glue job name to run"
+        required: false
+        default: "my-glue-job"
+
+permissions:
+  id-token: write   # Required for GitHub OIDC authentication to AWS
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  GLUE_JOB_NAME: my-glue-job
+
+jobs:
+  start-glue-job:
+    name: Start Glue job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Start AWS Glue job
+        id: glue
+        shell: bash
+        env:
+          SELECTED_JOB_NAME: ${{ inputs.glue_job_name || env.GLUE_JOB_NAME }}
+        run: |
+          RUN_ID=$(aws glue start-job-run \
+            --job-name "$SELECTED_JOB_NAME" \
+            --arguments '{
+              "--ENVIRONMENT": "prod",
+              "--enable-metrics": "true"
+            }' \
+            --query 'JobRunId' \
+            --output text)
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "Started Glue job: $SELECTED_JOB_NAME"
+          echo "Glue JobRunId: $RUN_ID"
+
+      - name: Wait for Glue job completion
+        shell: bash
+        env:
+          SELECTED_JOB_NAME: ${{ inputs.glue_job_name || env.GLUE_JOB_NAME }}
+          RUN_ID: ${{ steps.glue.outputs.run_id }}
+        run: |
+          echo "Waiting for Glue run $RUN_ID..."
+
+          while true; do
+            STATUS=$(aws glue get-job-run \
+              --job-name "$SELECTED_JOB_NAME" \
+              --run-id "$RUN_ID" \
+              --query 'JobRun.JobRunState' \
+              --output text)
+
+            echo "Current status: $STATUS"
+
+            case "$STATUS" in
+              SUCCEEDED)
+                echo "Glue job completed successfully."
+                exit 0
+                ;;
+              FAILED|TIMEOUT|STOPPED|ERROR|EXPIRED)
+                echo "Glue job did not succeed. Final status: $STATUS"
+                exit 1
+                ;;
+              *)
+                sleep 30
+                ;;
+            esac
+          done
