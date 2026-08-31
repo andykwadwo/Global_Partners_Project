@@ -9,3 +9,6 @@ can be found in the gp_CLV_gold_table
 
 Customer Segmentation & Behavior Metrics:
 can be found in the below folders
+The distinct segment that emerged when customers are grouped by recency days, frequency count and monetary value
+was the recency days. This is due to the freshness of the data being worked with.
+
