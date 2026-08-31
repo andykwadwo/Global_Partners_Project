@@ -14,3 +14,8 @@ was the recency days. This is due to the freshness of the data being worked with
 
 Churn Risk Indicators Dashboard:
 Script used for generating this metric can be found in the folder gb_CHURNIND_gold_table.
+
+
+Sales Trends and Seasonality Dashboard:
+Scripts used for this metric can be found in gp_daily_rev_gold_table, gp_weekly_rev_gold_table and gp_monthly_rev_gold_table
+folders. Visualization shows the totals for weekly and monthly revenues.
