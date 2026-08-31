@@ -12,3 +12,5 @@ can be found in the below folders
 The distinct segment that emerged when customers are grouped by recency days, frequency count and monetary value
 was the recency days. This is due to the freshness of the data being worked with.
 
+Churn Risk Indicators Dashboard:
+Script used for generating this metric can be found in the folder gb_CHURNIND_gold_table.
