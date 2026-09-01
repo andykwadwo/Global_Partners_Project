@@ -13,7 +13,7 @@ on:
       glue_job_name:
         description: "AWS Glue job name to run"
         required: false
-        default: "my-glue-job"
+        default: "gp_CLV_gold_table"
 
 permissions:
   id-token: write   # Required for GitHub OIDC authentication to AWS
@@ -21,7 +21,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  GLUE_JOB_NAME: my-glue-job
+  GLUE_JOB_NAME: gp_CLV_gold_table
 
 jobs:
   start-glue-job:
